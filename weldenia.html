@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <!-- Permite utilizar tildes, ñ y otros caracteres -->
+    <meta charset="UTF-8">
+
+    <!-- Adapta la página a celulares y computadoras -->
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <!-- Nombre que aparece en la pestaña del navegador -->
+    <title>Weldenia candida</title>
+
+    <!-- Carga Paper.js desde el repositorio -->
+    <script src="paper-full.js"></script>
+
+    <!-- Carga nuestro código para dibujar la flor -->
+    <script src="weldenia.js" defer></script>
+
+    <style>
+        /*
+         * Hace que el padding no cambie
+         * inesperadamente el tamaño de los elementos.
+         */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+
+            display: grid;
+            grid-template-columns: 1fr 300px;
+
+            font-family: Arial, sans-serif;
+            color: #273026;
+            background: #ece9df;
+        }
+
+        /*
+         * El canvas es el espacio donde dibuja Paper.js.
+         */
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100vh;
+
+            background:
+                radial-gradient(
+                    circle,
+                    #ffffff,
+                    #e8e5dc
+                );
+        }
+
+        /*
+         * Panel de controles.
+         */
+        aside {
+            padding: 25px;
+            background: #faf9f5;
+            border-left: 1px solid #cbc7bc;
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 8px;
+
+            font-family: Georgia, serif;
+            font-size: 24px;
+        }
+
+        p {
+            color: #5d625b;
+            line-height: 1.5;
+        }
+
+        label {
+            display: block;
+            margin-top: 20px;
+            margin-bottom: 7px;
+
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            font-weight: normal;
+        }
+
+        button {
+            width: 100%;
+            padding: 11px;
+            margin-top: 14px;
+
+            border: 1px solid #8f968a;
+            border-radius: 7px;
+
+            font-size: 14px;
+            cursor: pointer;
+
+            color: #283026;
+            background: #e8e9e3;
+        }
+
+        button:hover {
+            background: #d9dfd3;
+        }
+
+        /*
+         * Botón principal.
+         */
+        #newFlower {
+            color: white;
+            background: #53724d;
+            border-color: #53724d;
+        }
+
+        #newFlower:hover {
+            background: #405e3b;
+        }
+
+        /*
+         * Adaptación para celulares.
+         */
+        @media (max-width: 700px) {
+            body {
+                grid-template-columns: 1fr;
+            }
+
+            canvas {
+                height: 65vh;
+            }
+
+            aside {
+                border-left: 0;
+                border-top: 1px solid #cbc7bc;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        Paper.js encontrará este canvas mediante su id.
+        El atributo resize hace que se adapte a la ventana.
+    -->
+    <canvas id="flowerCanvas" resize></canvas>
+
+    <!-- Panel de controles -->
+    <aside>
+        <h1>
+            <i>Weldenia candida</i>
+        </h1>
+
+        <p>
+            Generador procedural de una flor con tres
+            pétalos blancos y seis estambres amarillos.
+        </p>
+
+        <!-- Control del tamaño -->
+        <label for="petalSize">
+            Tamaño de la flor:
+            <output id="sizeOutput">100</output>%
+        </label>
+
+        <input
+            id="petalSize"
+            type="range"
+            min="70"
+            max="125"
+            value="100"
+        >
+
+        <!-- Modo de líneas -->
+        <label class="checkbox-label">
+            <input
+                id="lineart"
+                type="checkbox"
+            >
+
+            Dibujar solo líneas
+        </label>
+
+        <!-- Nervaduras -->
+        <label class="checkbox-label">
+            <input
+                id="veins"
+                type="checkbox"
+                checked
+            >
+
+            Mostrar nervaduras
+        </label>
+
+        <!-- Botón para cambiar la forma -->
+        <button id="newFlower">
+            Nueva variación
+        </button>
+
+        <!-- Botón para descargar el resultado -->
+        <button id="saveSvg">
+            Guardar como SVG
+        </button>
+    </aside>
+</body>
+
+</html>

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Weldenia candida</title>
+  <script src="paper-full.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; font-family: Arial, sans-serif; background: #ece9df; }
+    body { display: grid; grid-template-columns: 1fr 280px; }
+    canvas { width: 100%; height: 100vh; display: block; background: radial-gradient(circle, #fff, #e8e5dc); }
+    aside { padding: 24px; background: #faf9f5; border-left: 1px solid #cbc7bc; }
+    h1 { margin: 0 0 8px; font: italic 24px Georgia, serif; }
+    p { color: #5d625b; line-height: 1.45; }
+    label { display: block; margin-top: 18px; margin-bottom: 6px; font-weight: bold; }
+    input[type=range] { width: 100%; }
+    button { width: 100%; margin-top: 14px; padding: 10px; border: 1px solid #8f968a; border-radius: 7px; cursor: pointer; }
+    #newFlower { color: white; background: #53724d; border-color: #53724d; }
+    @media (max-width: 700px) { body { grid-template-columns: 1fr; } canvas { height: 65vh; } aside { border: 0; border-top: 1px solid #cbc7bc; } }
+  </style>
+</head>
+<body>
+  <canvas id="flowerCanvas" resize></canvas>
+  <aside>
+    <h1>Weldenia candida</h1>
+    <p>Interpretación procedural: tres pétalos blancos y seis estambres amarillos.</p>
+    <label>Tamaño: <output id="sizeOut">100</output>%</label>
+    <input id="size" type="range" min="70" max="125" value="100">
+    <label><input id="lineart" type="checkbox"> Solo líneas</label>
+    <label><input id="veins" type="checkbox" checked> Mostrar nervaduras</label>
+    <button id="newFlower">Nueva variación</button>
+    <button id="saveSvg">Guardar SVG</button>
+  </aside>
+  <script>
+    paper.install(window);
+    let seed = Math.random() * 1000000;
+    let drawing;
+
+    function rngFactory(value) {
+      let state = value >>> 0;
+      return () => {
+        state = (state * 1664525 + 1013904223) >>> 0;
+        return state / 4294967296;
+      };
+    }
+
+    function between(rng, a, b) { return a + rng() * (b - a); }
+
+    function petal(center, angle, length, width, lineart) {
+      const direction = new Point({ angle, length });
+      const normal = direction.normalize(width / 2).rotate(90);
+      const tip = center.add(direction);
+      const path = new Path();
+      path.add(center.add(normal.multiply(.15)));
+      path.cubicCurveTo(
+        center.add(direction.multiply(.2)).add(normal.multiply(.9)),
+        center.add(direction.multiply(.72)).add(normal.multiply(.55)),
+        tip
+      );
+      path.cubicCurveTo(
+        center.add(direction.multiply(.72)).subtract(normal.multiply(.55)),
+        center.add(direction.multiply(.2)).subtract(normal.multiply(.9)),
+        center.subtract(normal.multiply(.15))
+      );
+      path.closed = true;
+      path.fillColor = lineart ? null : {
+        gradient: { stops: [['#fffef8', 0], ['#e4e1d8', 1]] },
+        origin: center,
+        destination: tip
+      };
+      path.strokeColor = lineart ? '#292929' : '#c5c2b9';
+      path.strokeWidth = 1.5;
+      return path;
+    }
+
+    function vein(center, angle, length, lineart) {
+      const end = center.add(new Point({ angle, length }));
+      const path = new Path();
+      path.add(center);
+      path.cubicCurveTo(
+        center.add(new Point({ angle: angle - 4, length: length * .35 })),
+        center.add(new Point({ angle: angle + 3, length: length * .72 })),
+        end
+      );
+      path.strokeColor = lineart ? '#292929' : '#aaa79f';
+      path.strokeWidth = .7;
+      path.opacity = lineart ? .45 : .18;
+      return path;
+    }
+
+    function stamen(center, angle, length, scale, lineart) {
+      const group = new Group();
+      const direction = new Point({ angle, length });
+      const end = center.add(direction);
+      const filament = new Path.Line(center.add(direction.normalize(7 * scale)), end);
+      filament.strokeColor = lineart ? '#292929' : '#eee9da';
+      filament.strokeWidth = 2.7 * scale;
+      group.addChild(filament);
+      const offset = direction.normalize(2.4 * scale).rotate(90);
+      [offset, offset.multiply(-1)].forEach((side, index) => {
+        const sac = new Path.Ellipse({ center: end.add(side), size: [19 * scale, 4.5 * scale] });
+        sac.rotate(angle, end);
+        sac.fillColor = lineart ? null : (index ? '#ffd126' : '#f5bf00');
+        sac.strokeColor = lineart ? '#292929' : '#d89b00';
+        sac.strokeWidth = .7;
+        group.addChild(sac);
+      });
+      return group;
+    }
+
+    function draw() {
+      if (drawing) drawing.remove();
+      drawing = new Group();
+      const random = rngFactory(seed);
+      const lineart = document.querySelector('#lineart').checked;
+      const showVeins = document.querySelector('#veins').checked;
+      const scale = Math.min(view.size.width, view.size.height) / 500 * Number(document.querySelector('#size').value) / 100;
+      document.querySelector('#sizeOut').value = document.querySelector('#size').value;
+      const center = view.center;
+
+      const angles = [-90, 30, 150];
+      angles.forEach(angle => {
+        const a = angle + between(random, -3, 3);
+        drawing.addChild(petal(center, a, 165 * scale * between(random, .96, 1.04), 125 * scale * between(random, .94, 1.06), lineart));
+        if (showVeins) {
+          drawing.addChild(vein(center, a, 145 * scale, lineart));
+          drawing.addChild(vein(center, a - 7, 125 * scale, lineart));
+          drawing.addChild(vein(center, a + 7, 125 * scale, lineart));
+        }
+      });
+
+      for (let i = 0; i < 6; i++) {
+        const angle = -90 + i * 60 + between(random, -5, 5);
+        drawing.addChild(stamen(center, angle, between(random, 42, 58) * scale, scale, lineart));
+      }
+
+      const centerCircle = new Path.Circle(center, 10 * scale);
+      centerCircle.fillColor = lineart ? null : '#e9e5d9';
+      centerCircle.strokeColor = lineart ? '#292929' : '#cbc7bd';
+      drawing.addChild(centerCircle);
+      for (let i = 0; i < 12; i++) {
+        const point = center.add(new Point({ angle: between(random, 0, 360), length: between(random, 1, 8) * scale }));
+        const dot = new Path.Circle(point, between(random, .8, 1.8) * scale);
+        dot.fillColor = lineart ? '#292929' : '#f8f6ee';
+        drawing.addChild(dot);
+      }
+      view.update();
+    }
+
+    function saveSvg() {
+      const svg = project.exportSVG({ asString: true, bounds: 'content' });
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'weldenia-candida.svg';
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    window.addEventListener('load', () => {
+      paper.setup('flowerCanvas');
+      draw();
+      document.querySelector('#size').addEventListener('input', draw);
+      document.querySelector('#lineart').addEventListener('change', draw);
+      document.querySelector('#veins').addEventListener('change', draw);
+      document.querySelector('#newFlower').addEventListener('click', () => { seed = Math.random() * 1000000; draw(); });
+      document.querySelector('#saveSvg').addEventListener('click', saveSvg);
+      window.addEventListener('resize', draw);
+    });
+  </script>
+</body>
+</html>

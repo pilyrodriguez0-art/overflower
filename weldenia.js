@@ -3,10 +3,12 @@ paper.install(window);
 window.addEventListener('load', function () {
     paper.setup('flowerCanvas');
 
-    const circle = new Path.Circle(
-        view.center,
-        50
-    );
+    const petal = new Path.Ellipse({
+        center: view.center,
+        size: [180, 260]
+    });
 
-    circle.fillColor = 'yellow';
+    petal.fillColor = 'white';
+    petal.strokeColor = '#cccccc';
+    petal.strokeWidth = 2;
 });
